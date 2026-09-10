@@ -1,0 +1,30 @@
+.sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.sidebar-title {
+    margin-bottom: 24px;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    color: #cfcfe8;
+    text-decoration: none;
+}
+
+.sidebar-link:hover {
+    background: #2a2a45;
+}
+
+.sidebar-link.active {
+    background: #4a4ae0;
+    color: #fff;
+}
