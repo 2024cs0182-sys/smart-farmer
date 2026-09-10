@@ -1,38 +1,58 @@
-import { useEffect, useState } from 'react';
-import { getDashboardSummary } from '../services/api';
+import { useCallback, useEffect, useState } from 'react';
+import { apiGet } from '../lib/api';
+import { Loading, ErrorState } from '../components/PageState';
 
 function Dashboard() {
-  const [summary, setSummary] = useState(null);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    getDashboardSummary()
-      .then(setSummary)
-      .catch((err) => setError(err.message));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setData(await apiGet('/admin/dashboard/'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  if (error) return <div className="page"><h1>Dashboard</h1><p>Error: {error}. Is the backend running?</p></div>;
-  if (!summary) return <div className="page"><h1>Dashboard</h1><p>Loading...</p></div>;
+  useEffect(() => { load(); }, [load]);
 
-  const stats = [
-    { label: 'Total Centres', value: summary.total_centres },
-    { label: 'Total Bookings', value: summary.total_bookings },
-    { label: 'Confirmed Bookings', value: summary.confirmed_bookings },
-    { label: 'Total Procurement', value: summary.total_procurement },
-    { label: 'Total Payments', value: summary.total_payments },
-  ];
+  const stats = data ? [
+    ['Total Centres', data.total_centres],
+    ['Total Bookings', data.total_bookings],
+    ['Confirmed Bookings', data.confirmed_bookings],
+    ['Procurement Records', data.total_procurement],
+    ['Payment Records', data.total_payments],
+  ] : [];
 
   return (
     <div className="page">
-      <h1>Dashboard</h1>
-      <div className="stat-grid">
-        {stats.map((s) => (
-          <div className="stat-card" key={s.label}>
-            <div className="stat-value">{s.value}</div>
-            <div className="stat-label">{s.label}</div>
-          </div>
-        ))}
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">SMART FARMER PROCUREMENT</p>
+          <h1>Dashboard</h1>
+          <p className="page-subtitle">Live information from FastAPI and PostgreSQL.</p>
+        </div>
+        <button className="refresh-button" onClick={load}>Refresh</button>
       </div>
+
+      {loading && <Loading text="Loading dashboard..." />}
+      {!loading && error && <ErrorState message={error} onRetry={load} />}
+
+      {!loading && !error && (
+        <div className="stat-grid">
+          {stats.map(([label, value]) => (
+            <div className="stat-card" key={label}>
+              <div className="stat-value">{value ?? 0}</div>
+              <div className="stat-label">{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
